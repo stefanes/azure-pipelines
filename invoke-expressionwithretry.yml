@@ -54,7 +54,7 @@ steps:
               if ($retryCounter -gt 0) {
                   # wait before trying again
                   $retryWaitTime = [Math]::Min([Math]::Pow($failureCount, 2), [int]::Parse("${{ parameters.maxRetryWaitTimeInMinutes }}") * 60)
-                  Write-Host "##vso[task.logissue type=warning]Keep calm and carry on... [Recent failures = $failureCount | Last failure = $($lastFailure.ToString('HH:mm:ss')) | Wait time = $retryWaitTime | Attempts left = $retryCounter] :: $_"
+                  Write-Host "##vso[task.logissue type=warning]Keep calm and carry on... [Recent failures = $failureCount | Last failure = $($lastFailure.ToString('HH:mm:ss')) | Wait time = $retryWaitTime | Attempt = $($numberOfRetries - $retryCounter + 1)] :: $_"
                   Start-Sleep -Seconds $retryWaitTime
               }
               else {
