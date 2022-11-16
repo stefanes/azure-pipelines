@@ -1,0 +1,77 @@
+parameters:
+  - name: numberOfRetries
+    type: number
+    default: 10
+  - name: expression
+    type: string
+  - name: recentFailureThresholdInMinutes
+    type: number
+    default: 1
+  - name: maxRetryWaitTimeInMinutes
+    type: number
+    default: 300
+  - name: displayName
+    type: string
+  - name: retryCountOnTaskFailure
+    type: number
+    default: 10
+  - name: env
+    type: object
+    default: []
+
+steps:
+  - pwsh: |
+      # Setup parameters
+      $succeedWithIssues = $false
+      $failureCount = 0
+      $numberOfRetries = [int]::Parse("${{ parameters.numberOfRetries }}")
+      if ($numberOfRetries -eq -1) {
+          $numberOfRetries = [int]::MaxValue
+      }
+      $retryCounter = $numberOfRetries
+      $lastFailure = [DateTime]::MinValue
+
+      # Call provided expression and retry on failure
+      while ($true) {
+          try {
+              $expression = "${{ parameters.expression }}"
+              Write-Host "##[command]Invoke-Expression -Command `"& $expression`""
+              Invoke-Expression -Command "& $expression"
+              break # normal exit
+          }
+          catch {
+              if (--$retryCounter -gt 0) {
+                  # failure, try again...
+                  $succeedWithIssues = $true
+                  $failureCount++
+                  Write-Host "##vso[task.logissue type=warning]Keep calm and carry on... [Recent failures = $failureCount | Last failure = $($lastFailure.ToString('yyyy-MM-dd HH:mm:ss'))] :: $_"
+
+                  # if multiple failures within the given time
+                  if ([DateTime]::Now -lt $lastFailure.AddMinutes([int]::Parse("${{ parameters.recentFailureThresholdInMinutes }}"))) {
+                      $retryWaitTime = [Math]::Min([Math]::Pow($failureCount, 2), [int]::Parse("${{ parameters.maxRetryWaitTimeInMinutes }}") * 60)
+                      Write-Host "Retrying in $retryWaitTime second(s), $retryCounter attempts left"
+                      Start-Sleep -Seconds $retryWaitTime
+                  } else {
+                      # reset failure count and retry counter
+                      $failureCount = 0
+                      $retryCounter = $numberOfRetries
+                  }
+
+                  # update time of last failure
+                  $lastFailure = [DateTime]::Now
+              }
+              else {
+                  throw $_
+              }
+          }
+      }
+
+      # Exit with warning if any failures
+      if ($succeedWithIssues) {
+          Write-Host "##vso[task.complete result=SucceededWithIssues;]DONE"
+          exit 0
+      }
+    displayName: ${{ parameters.displayName }}
+    workingDirectory: $(Build.SourcesDirectory)
+    retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
+    env: ${{ parameters.env }}
