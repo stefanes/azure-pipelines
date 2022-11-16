@@ -40,29 +40,29 @@ steps:
               break # normal exit
           }
           catch {
-              if (--$retryCounter -gt 0) {
-                  # failure, try again...
-                  $succeedWithIssues = $true
+              # if multiple failures within the given time
+              if ([DateTime]::Now -lt $lastFailure.AddMinutes([int]::Parse("${{ parameters.recentFailureThresholdInMinutes }}"))) {
+                  # update failure count and retry counter
                   $failureCount++
-                  Write-Host "##vso[task.logissue type=warning]Keep calm and carry on... [Recent failures = $failureCount | Last failure = $($lastFailure.ToString('yyyy-MM-dd HH:mm:ss'))] :: $_"
+                  $retryCounter--
+              } else {
+                  # reset failure count and retry counter
+                  $failureCount = 0
+                  $retryCounter = $numberOfRetries
+              }
 
-                  # if multiple failures within the given time
-                  if ([DateTime]::Now -lt $lastFailure.AddMinutes([int]::Parse("${{ parameters.recentFailureThresholdInMinutes }}"))) {
-                      $retryWaitTime = [Math]::Min([Math]::Pow($failureCount, 2), [int]::Parse("${{ parameters.maxRetryWaitTimeInMinutes }}") * 60)
-                      Write-Host "Retrying in $retryWaitTime second(s), $retryCounter attempts left"
-                      Start-Sleep -Seconds $retryWaitTime
-                  } else {
-                      # reset failure count and retry counter
-                      $failureCount = 0
-                      $retryCounter = $numberOfRetries
-                  }
-
-                  # update time of last failure
-                  $lastFailure = [DateTime]::Now
+              if ($retryCounter -gt 0) {
+                  # wait before trying again
+                  $retryWaitTime = [Math]::Min([Math]::Pow($failureCount, 2), [int]::Parse("${{ parameters.maxRetryWaitTimeInMinutes }}") * 60)
+                  Write-Host "##vso[task.logissue type=warning]Keep calm and carry on... [Recent failures = $failureCount | Last failure = $($lastFailure.ToString('HH:mm:ss')) | Wait time = $retryWaitTime | Attempts left = $retryCounter] :: $_"
+                  Start-Sleep -Seconds $retryWaitTime
               }
               else {
                   throw $_
               }
+
+              $succeedWithIssues = $true
+              $lastFailure = [DateTime]::Now
           }
       }
 
