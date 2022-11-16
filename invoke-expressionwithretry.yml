@@ -9,7 +9,7 @@ parameters:
     default: 1
   - name: maxRetryWaitTimeInMinutes
     type: number
-    default: 300
+    default: 5
   - name: displayName
     type: string
   - name: retryCountOnTaskFailure
