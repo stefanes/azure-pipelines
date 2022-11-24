@@ -6,7 +6,7 @@ parameters:
     type: string
   - name: recentFailureThresholdInMinutes
     type: number
-    default: 1
+    default: 2
   - name: maxRetryWaitTimeInMinutes
     type: number
     default: 5
