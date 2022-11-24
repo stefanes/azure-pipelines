@@ -41,7 +41,8 @@ steps:
           }
           catch {
               # if multiple failures within the given time
-              if ([DateTime]::Now -lt $lastFailure.AddMinutes([int]::Parse("${{ parameters.recentFailureThresholdInMinutes }}"))) {
+              $currentFailure = [DateTime]::Now
+              if ($currentFailure -lt $lastFailure.AddMinutes([int]::Parse("${{ parameters.recentFailureThresholdInMinutes }}"))) {
                   # update failure count and retry counter
                   $failureCount++
                   $retryCounter--
@@ -54,7 +55,7 @@ steps:
               if ($retryCounter -gt 0) {
                   # wait before trying again
                   $retryWaitTime = [Math]::Min([Math]::Pow($failureCount, 2), [int]::Parse("${{ parameters.maxRetryWaitTimeInMinutes }}") * 60)
-                  Write-Host "##vso[task.logissue type=warning]Keep calm and carry on... [Recent failures = $failureCount | Last failure = $($lastFailure.ToString('HH:mm:ss')) | Wait time = $retryWaitTime | Attempt = $($numberOfRetries - $retryCounter + 1)] :: $_"
+                  Write-Host "##vso[task.logissue type=warning]$($currentFailure.ToString('HH:mm:ssK')) | Keep calm and carry on... [Last failure = $($lastFailure.ToString('HH:mm:ssK')) | Recent failures = $failureCount | Wait time = $retryWaitTime | Attempt = $($numberOfRetries - $retryCounter + 1)] :: $_"
                   Start-Sleep -Seconds $retryWaitTime
               }
               else {
@@ -62,7 +63,7 @@ steps:
               }
 
               $succeedWithIssues = $true
-              $lastFailure = [DateTime]::Now
+              $lastFailure = $currentFailure
           }
       }
 
