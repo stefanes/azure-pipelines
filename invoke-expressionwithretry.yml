@@ -6,10 +6,10 @@ parameters:
     type: string
   - name: recentFailureThresholdInMinutes
     type: number
-    default: 2
+    default: 3
   - name: maxRetryWaitTimeInMinutes
     type: number
-    default: 5
+    default: 6
   - name: displayName
     type: string
   - name: retryCountOnTaskFailure
