@@ -1,6 +1,6 @@
 ########################################################################
 # Template:    invoke-expressionwithretry.yml
-# Description: Invoke a PowerShell expression, retrying the spcified
+# Description: Invoke a PowerShell expression, retrying the specified
 #              number of time on failure.
 ########################################################################
 
