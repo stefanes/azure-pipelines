@@ -8,6 +8,11 @@ parameters:
   - name: minPowerShellGetVersion
     default: "2.2.5"
 
+  # Number of times to retry task on failure.
+  - name: retryCountOnTaskFailure
+    type: number
+    default: 3
+
 steps:
   - pwsh: |
       [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -36,3 +41,4 @@ steps:
           Write-Host "PowerShellGet version meets the minimum requirement"
       }
     displayName: Check PowerShellGet version
+    retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}

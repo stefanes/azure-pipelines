@@ -1,20 +1,42 @@
+########################################################################
+# Template:    invoke-expressionwithretry.yml
+# Description: Invoke a PowerShell expression, retrying the spcified
+#              number of time on failure.
+########################################################################
+
 parameters:
+  # Number of time to retry calling the provided PowerShell expression.
+  # Set to -1 to retry indefinately.
   - name: numberOfRetries
     type: number
     default: 10
+
+  # The PowerShell expression to execute. Expression is executed using
+  # 'Invoke-Expression -Command "& <expression>"'.
   - name: expression
     type: string
+
+  # Failures outside this time frame will restart the retry process.
   - name: recentFailureThresholdInMinutes
     type: number
     default: 3
+
+  # Maximum time to wait between attempts. The retry wait time will be
+  # increased incrementally up until this number.
   - name: maxRetryWaitTimeInMinutes
     type: number
     default: 6
+
+  # The task display name.
   - name: displayName
     type: string
+
+  # Number of times to retry task on failure.
   - name: retryCountOnTaskFailure
     type: number
     default: 10
+
+  # Environment variables passed to the task.
   - name: env
     type: object
     default: []

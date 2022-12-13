@@ -63,6 +63,11 @@ parameters:
     type: boolean
     default: true
 
+  # Number of times to retry task on failure.
+  - name: retryCountOnTaskFailure
+    type: number
+    default: 3
+
 steps:
   - template: check-powershellget.yml
 
@@ -124,3 +129,4 @@ steps:
           Install-Module @splat @moreSplat
       }
     displayName: Install modules from ${{ parameters.repoName }}
+    retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
